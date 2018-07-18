@@ -128,13 +128,36 @@ Napi::Value Notify::Show(const Napi::CallbackInfo& info) {
         templ.addAction(s2ws(action));
         actions.push_back(action);
     }
-    WinToast::instance()->showToast(templ, new WinToastHandlerExample(actions, move(callback)));
+    INT64 id = WinToast::instance()->showToast(templ, new WinToastHandlerExample(actions, move(callback)));
+    napi_value value;
+    napi_create_int64(env, id, &value);
+    return Napi::Number(env, value);
+}
+
+Napi::Value Notify::Hide(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+
+    if (info.Length() < 1) {
+        Napi::TypeError::New(env, "Wrong number of arguments 1 expected")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    if (!info[0].IsNumber()) {
+        Napi::TypeError::New(env, "1 arguments expected (id)")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    auto id = info[0].As<Napi::Number>().Int64Value();
+    WinToast::instance()->hideToast(id);
     return env.Null();
 }
 
 Napi::Function Notify::GetClass(Napi::Env env) {
     return DefineClass(env, "Notify", {
         Notify::InstanceMethod("show", &Notify::Show),
+        Notify::InstanceMethod("hide", &Notify::Hide),
     });
 }
 
