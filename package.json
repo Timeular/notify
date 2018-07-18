@@ -5,8 +5,7 @@
     "napi-thread-safe-callback": "0.0.5"
   },
   "scripts": {
-    "test": "node --napi-modules ./test/test_binding.js",
-    "preinstall": "git submodule update --recursive --remote"
+    "test": "node --napi-modules ./test/test_binding.js"
   },
   "gypfile": true,
   "name": "notify",
