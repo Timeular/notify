@@ -99,14 +99,14 @@ Notify::Notify(const Napi::CallbackInfo& info) : ObjectWrap(info) {
 Napi::Value Notify::Show(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
-    if (info.Length() < 5) {
-        Napi::TypeError::New(env, "Wrong number of arguments 5 expected")
+    if (info.Length() < 6) {
+        Napi::TypeError::New(env, "Wrong number of arguments 6 expected")
             .ThrowAsJavaScriptException();
         return env.Null();
     }
 
-    if (!info[0].IsString() || !info[1].IsString() || !info[2].IsString() || !info[3].IsArray() || !info[4].IsFunction()) {
-        Napi::TypeError::New(env, "5 arguments expected (image, title, content, actions, callback)")
+    if (!info[0].IsString() || !info[1].IsString() || !info[2].IsString() || !info[3].IsBoolean() || !info[4].IsArray() || !info[5].IsFunction()) {
+        Napi::TypeError::New(env, "5 arguments expected (image, title, content, sound, actions, callback)")
             .ThrowAsJavaScriptException();
         return env.Null();
     }
@@ -114,13 +114,15 @@ Napi::Value Notify::Show(const Napi::CallbackInfo& info) {
     auto image = info[0].As<Napi::String>().Utf8Value();
     auto title = info[1].As<Napi::String>().Utf8Value();
     auto content = info[2].As<Napi::String>().Utf8Value();
-    auto actionsArray = info[3].As<Napi::Array>();
-    auto callback = std::make_shared<ThreadSafeCallback>(info[4].As<Napi::Function>());
+    auto soundEnabled = info[3].As<Napi::Boolean>();
+    auto actionsArray = info[4].As<Napi::Array>();
+    auto callback = std::make_shared<ThreadSafeCallback>(info[5].As<Napi::Function>());
 
     WinToastTemplate templ = WinToastTemplate(WinToastTemplate::ImageAndText02);
     templ.setImagePath(s2ws(image));
     templ.setTextField(s2ws(title), WinToastTemplate::FirstLine);
     templ.setTextField(s2ws(content), WinToastTemplate::SecondLine);
+    templ.setAudioOption(soundEnabled ? WinToastTemplate::AudioOption::Default : WinToastTemplate::AudioOption::Silent);
 
     std::vector<std::string> actions;
     for (uint32_t i = 0; i < actionsArray.Length(); i++) {
