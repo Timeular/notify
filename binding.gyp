@@ -10,7 +10,7 @@
           'msvs_settings': {
             'VCCLCompilerTool': { 'ExceptionHandling': 1 },
           },
-          'defines': [ '_HAS_EXCEPTIONS=1' ] 
+          'defines': [ '_HAS_EXCEPTIONS=1' ]
         }]
 	    ]
     }
