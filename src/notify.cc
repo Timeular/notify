@@ -75,7 +75,7 @@ Notify::Notify(const Napi::CallbackInfo& info) : ObjectWrap(info) {
           .ThrowAsJavaScriptException();
         return;
     }
-    
+
     if (!WinToast::isCompatible()) {
         Napi::TypeError::New(env, "Error, your system in not supported!")
             .ThrowAsJavaScriptException();
@@ -85,10 +85,12 @@ Notify::Notify(const Napi::CallbackInfo& info) : ObjectWrap(info) {
     auto appName = info[0].As<Napi::String>().Utf8Value();
     auto aumi = info[1].As<Napi::String>().Utf8Value();
 
-    WinToast::instance()->setAppName(s2ws(appName));
-    WinToast::instance()->setAppUserModelId(s2ws(aumi));
+    mWinToast = new WinToast;
+
+    mWinToast->setAppName(s2ws(appName));
+    mWinToast->setAppUserModelId(s2ws(aumi));
     WinToast::WinToastError error;
-    if (!WinToast::instance()->initialize(&error)) {
+    if (!mWinToast->initialize(&error)) {
         printf("\n\nerror %d\n\n", error);
         Napi::TypeError::New(env, "Error, could not initialize the lib!")
             .ThrowAsJavaScriptException();
@@ -98,6 +100,10 @@ Notify::Notify(const Napi::CallbackInfo& info) : ObjectWrap(info) {
 
 Napi::Value Notify::Show(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
+
+    if (!mWinToast) {
+        return env.Null();
+    }
 
     if (info.Length() < 6) {
         Napi::TypeError::New(env, "Wrong number of arguments 6 expected")
@@ -130,7 +136,7 @@ Napi::Value Notify::Show(const Napi::CallbackInfo& info) {
         templ.addAction(s2ws(action));
         actions.push_back(action);
     }
-    INT64 id = WinToast::instance()->showToast(templ, new WinToastHandlerExample(actions, move(callback)));
+    INT64 id = mWinToast->showToast(templ, new WinToastHandlerExample(actions, move(callback)));
     napi_value value;
     napi_create_int64(env, id, &value);
     return Napi::Number(env, value);
@@ -138,6 +144,10 @@ Napi::Value Notify::Show(const Napi::CallbackInfo& info) {
 
 Napi::Value Notify::Hide(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
+
+    if (!mWinToast) {
+        return env.Null();
+    }
 
     if (info.Length() < 1) {
         Napi::TypeError::New(env, "Wrong number of arguments 1 expected")
@@ -152,7 +162,18 @@ Napi::Value Notify::Hide(const Napi::CallbackInfo& info) {
     }
 
     auto id = info[0].As<Napi::Number>().Int64Value();
-    WinToast::instance()->hideToast(id);
+    mWinToast->hideToast(id);
+    return env.Null();
+}
+
+Napi::Value Notify::Clear(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (!mWinToast) {
+        return env.Null();
+    }
+    mWinToast->clear();
+    delete mWinToast;
+    mWinToast = nullptr;
     return env.Null();
 }
 
@@ -160,6 +181,7 @@ Napi::Function Notify::GetClass(Napi::Env env) {
     return DefineClass(env, "Notify", {
         Notify::InstanceMethod("show", &Notify::Show),
         Notify::InstanceMethod("hide", &Notify::Hide),
+        Notify::InstanceMethod("clear", &Notify::Clear),
     });
 }
 
