@@ -1,13 +1,11 @@
 {
   "main": "lib/binding.js",
-  "dependencies": {
-    "bindings": "1.5.0",
+  "devDependencies": {
     "napi-thread-safe-callback": "0.0.6",
-    "node-addon-api": "1.7.1",
-    "prebuild-install": "5.3.4"
+    "node-addon-api": "1.7.1"
   },
   "scripts": {
-    "install": "prebuild-install --force || node-gyp rebuild",
+    "install": "npx prebuild-install --force || node-gyp rebuild",
     "build:source": "node-gyp rebuild",
     "test": "node --napi-modules ./test/test_binding.js",
     "test:ci": "node --napi-modules ./test/test_ci.js"
