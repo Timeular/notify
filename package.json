@@ -5,10 +5,15 @@
     "node-addon-api": "1.7.1"
   },
   "scripts": {
-    "install": "npx prebuild-install --force || node-gyp rebuild",
+    "install": "npx prebuild-install --force --runtime napi || node-gyp rebuild",
     "build:source": "node-gyp rebuild",
     "test": "node --napi-modules ./test/test_binding.js",
     "test:ci": "node --napi-modules ./test/test_ci.js"
+  },
+  "binary": {
+    "napi_versions": [
+      3
+    ]
   },
   "gypfile": true,
   "name": "notify",
